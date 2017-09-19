@@ -1,0 +1,80 @@
+version: '3'
+
+services: 
+  nginx_proxy: 
+    image: nginx:1.12.1 
+    hostname: proxy.nginx.com
+    ports:
+      - 80:80
+    labels:
+      xxx.nginx.proxy.description: "nginx 转发"
+      xxx.type: "nginx"
+    volumes: 
+      - "./proxy/config/nginx.conf:/etc/nginx/nginx.conf"
+      - "./proxy/config/default.conf:/etc/nginx/conf.d/default.conf"
+      - "./proxy/nginx_temp:/tmp/nginx_temp"
+      - "./proxy/nginx_cache:/tmp/nginx_cache"
+      - "./proxy/html:/usr/share/nginx/html"
+    environment:
+      TZ: "Asia/Shanghai"
+    depends_on:
+      - nginx_real
+      - nginx_static
+    logging:
+      driver: syslog
+      options:
+        tag: "nginx-log"
+        syslog-address: "tcp://172.23.0.2:5000"
+    networks:
+      - nginx
+      - log
+  
+  nginx_real:
+    image: nginx:1.12.1
+    hostname: real.nginx.com
+    ports:
+      - 80
+#    deploy:
+#      replicas: 2
+    labels:
+      xxx.nginx.rs.description: "nginx 后端"
+      xxx.type: "nginx"
+    volumes:
+      - "./real:/usr/share/nginx/html"
+    environment:
+      TZ: "Asia/Shanghai"
+    logging:
+      driver: syslog
+      options:
+        tag: "nginx-log"
+        syslog-address: "tcp://172.23.0.2:5000"
+    networks:
+      - nginx
+      - log
+  
+  nginx_static:
+    image: nginx:1.12.1
+    hostname: mirror.nginx.com
+    ports:
+      - 80
+    labels:
+      - "xxx.nginx.rs.description=nginx 静态"
+      - "xxx.type=nginx"
+    volumes:
+      - "./static:/usr/share/nginx/html"
+    environment:
+      TZ: "Asia/Shanghai"
+    logging:
+      driver: syslog
+      options:
+        tag: "nginx-log"
+        syslog-address: "tcp://172.23.0.2:5000"
+    networks:
+      - nginx
+      - log
+
+networks:
+  nginx:
+    driver: bridge
+  log:
+    driver: bridge

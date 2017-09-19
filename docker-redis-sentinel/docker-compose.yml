@@ -1,0 +1,19 @@
+version: '2'
+
+services:
+
+  redis_master:
+    build: .
+    volumes:
+      - ./config/master.conf:/opt/redis/redis.conf
+#      - ./config/sentinel.conf:/opt/sentinel/sentinel.conf:rw
+    environment:
+      TZ: "Asia/Shanghai"
+
+  redis_slave:
+    build: .
+    volumes:
+      - ./config/slave.conf:/opt/redis/redis.conf
+#      - ./config/sentinel.conf:/opt/sentinel/sentinel.conf:rw
+    environment:
+      TZ: "Asia/Shanghai"
